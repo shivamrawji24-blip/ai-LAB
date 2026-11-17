@@ -3,6 +3,12 @@
 A modular, voice-and-text-enabled Virtual Assistant built using Python. Designed specifically for AI Lab submissions, this project implements Speech Recognition, Intent Classification, Action Execution, and Offline Text-to-Speech (TTS).
 
 ---
+## Supported Commands
+​Time & Date: "What is the time?", "What is today's date?"
+​Wikipedia Knowledge Search: "Who is [person]?", "What is [topic]?"
+​Web Navigation: "Open YouTube", "Open Google", "Search [query]"
+​System Control: "Open Calculator"
+​Exit: "Exit", "Stop", "Bye"
 
 ## 📐 System Architecture
 
