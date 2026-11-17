@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova — AI Lab Assistant</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            lab: {
+              bg: '#070B14',
+              surface: '#0F172A',
+              card: '#131C31',
+              border: '#1E293B',
+              cyan: '#06B6D4',
+              indigo: '#6366F1',
+              emerald: '#10B981',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom AI Lab Animations & Scrollbars */
+    body {
+      background-color: #070B14;
+      color: #F8FAFC;
+      overflow-x: hidden;
+    }
+
+    /* Subtle cyber grid background */
+    .bg-lab-grid {
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 55%),
+        radial-gradient(circle at 85% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 45%),
+        linear-gradient(to right, rgba(30, 41, 59, 0.25) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 41, 59, 0.25) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Nova Core Orb Animations */
+    @keyframes orb-breathe {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 28px rgba(6, 182, 212, 0.35), inset 0 0 18px rgba(99, 102, 241, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 42px rgba(6, 182, 212, 0.55), inset 0 0 24px rgba(99, 102, 241, 0.6); }
+    }
+
+    @keyframes orb-listen {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 35px rgba(244, 63, 94, 0.65), 0 0 70px rgba(244, 63, 94, 0.25); }
+      50% { transform: scale(1.12); box-shadow: 0 0 55px rgba(244, 63, 94, 0.9), 0 0 95px rgba(244, 63, 94, 0.4); }
+    }
+
+    @keyframes orb-speak {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 35px rgba(16, 185, 129, 0.6), 0 0 70px rgba(6, 182, 212, 0.35); }
+      25% { transform: scale(1.09); }
+      50% { transform: scale(0.98); }
+      75% { transform: scale(1.11); }
+    }
+
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes spin-reverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+
+    .orb-idle {
+      animation: orb-breathe 4s ease-in-out infinite;
+    }
+    .orb-listening {
+      animation: orb-listen 1.2s ease-in-out infinite;
+      background: radial-gradient(circle at 30% 30%, #FB7185, #E11D48 60%, #881337) !important;
+    }
+    .orb-speaking {
+      animation: orb-speak 0.8s ease-in-out infinite;
+      background: radial-gradient(circle at 30% 30%, #34D399, #06B6D4 60%, #1E3A8A) !important;
+    }
+    .orb-standby {
+      opacity: 0.45;
+      filter: grayscale(80%);
+      box-shadow: none !important;
+    }
+
+    .ring-outer {
+      animation: spin-slow 14s linear infinite;
+    }
+    .ring-inner {
+      animation: spin-reverse 9s linear infinite;
+    }
+
+    /* Equalizer Bars */
+    @keyframes eq-bounce {
+      0%, 100% { height: 6px; }
+      50% { height: 24px; }
+    }
+    .eq-bar {
+      width: 4px;
+      height: 6px;
+      border-radius: 9999px;
+      transition: background-color 0.3s ease;
+    }
+    .eq-active .eq-bar:nth-child(1) { animation: eq-bounce 0.65s ease-in-out infinite 0.05s; }
+    .eq-active .eq-bar:nth-child(2) { animation: eq-bounce 0.55s ease-in-out infinite 0.2s; }
+    .eq-active .eq-bar:nth-child(3) { animation: eq-bounce 0.75s ease-in-out infinite 0.1s; }
+    .eq-active .eq-bar:nth-child(4) { animation: eq-bounce 0.5s ease-in-out infinite 0.3s; }
+    .eq-active .eq-bar:nth-child(5) { animation: eq-bounce 0.68s ease-in-out infinite 0.15s; }
+    .eq-active .eq-bar:nth-child(6) { animation: eq-bounce 0.58s ease-in-out infinite 0.25s; }
+    .eq-active .eq-bar:nth-child(7) { animation: eq-bounce 0.72s ease-in-out infinite 0.08s; }
+  </style>
+</head>
+<body class="bg-lab-grid min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/80 px-4 sm:px-6 py-3">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-atom text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-lg tracking-tight text-white">NOVA</h1>
+            <span class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">AI Lab v2.5</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Web Speech &amp; Command Execution Environment</p>
+        </div>
+      </div>
+
+      <!-- Top Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Live Clock Pill -->
+        <div id="headerClock" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300">
+          <i class="fa-regular fa-clock text-cyan-400"></i>
+          <span id="clockText">--:-- --</span>
+        </div>
+
+        <!-- TTS Toggle Button -->
+        <button id="ttsToggleBtn" onclick="toggleTTS()" title="Toggle Voice Output (TTS)"
+          class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs font-medium text-cyan-300 transition">
+          <i id="ttsIcon" class="fa-solid fa-volume-high"></i>
+          <span class="hidden sm:inline" id="ttsLabel">Voice On</span>
+        </button>
+
+        <!-- Voice Settings Popover Trigger -->
+        <button onclick="toggleVoiceSettings()" title="Voice & Speech Rate Settings"
+          class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+
+        <!-- Calculator Quick Launch -->
+        <button onclick="openCalculatorModal()" title="Open Built-in Calculator"
+          class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs font-medium text-emerald-300 transition">
+          <i class="fa-solid fa-calculator"></i>
+          <span class="hidden md:inline">Calc</span>
+        </button>
+
+        <!-- View Python Source Button -->
+        <button onclick="openPythonModal()"
+          class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-xs font-medium text-indigo-300 transition">
+          <i class="fa-brands fa-python text-sm"></i>
+          <span>Python Source</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Collapsible Voice Settings Drawer -->
+    <div id="voiceSettingsPanel" class="hidden max-w-6xl mx-auto mt-3 pt-3 border-t border-slate-800/80">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+        <div>
+          <label for="voiceSelect" class="block text-xs font-medium text-slate-400 mb-1.5">Synthesizer Voice (pyttsx3 equivalent)</label>
+          <select id="voiceSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+            <option value="">Default System Voice</option>
+          </select>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs font-medium text-slate-400 mb-1.5">
+            <label for="rateSlider">Speech Rate</label>
+            <span id="rateValue" class="font-mono text-cyan-400">1.05x</span>
+          </div>
+          <input id="rateSlider" type="range" min="0.6" max="1.6" step="0.05" value="1.05"
+            class="w-full accent-cyan-500 cursor-pointer mt-1.5" />
+        </div>
+        <div>
+          <label for="langSelect" class="block text-xs font-medium text-slate-400 mb-1.5">Recognition Accent / Locale</label>
+          <select id="langSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+            <option value="en-IN" selected>English (India - en-IN)</option>
+            <option value="en-US">English (US - en-US)</option>
+            <option value="en-GB">English (UK - en-GB)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast / Status Banner for Browser Alerts -->
+  <div id="notificationBanner" class="hidden max-w-4xl mx-auto mt-3 px-4 w-full">
+    <div id="notificationContent" class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs">
+      <div class="flex items-center gap-2.5">
+        <i class="fa-solid fa-circle-info text-amber-400"></i>
+        <span id="notificationText">Notification message</span>
+      </div>
+      <button onclick="hideBanner()" class="text-amber-300 hover:text-white p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Workspace Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Nova Core Visualizer & Controls -->
+    <section class="lg:col-span-5 flex flex-col justify-between bg-slate-900/70 backdrop-blur-md border border-slate-800/90 rounded-3xl p-6 shadow-2xl">
+      <!-- Status Badge -->
+      <div class="flex items-center justify-between">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-slate-950 border border-slate-800 text-slate-300">
+          <span id="statusDot" class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          <span id="statusText">READY</span>
+        </span>
+        <button id="powerBtn" onclick="toggleNovaPower()"
+          class="text-xs px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 font-medium transition flex items-center gap-1.5">
+          <i class="fa-solid fa-power-off"></i>
+          <span id="powerBtnText">Start / Greet</span>
+        </button>
+      </div>
+
+      <!-- Central Glowing AI Orb -->
+      <div class="my-8 flex flex-col items-center justify-center relative">
+        <div class="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center">
+          <!-- Rotating Tech Rings -->
+          <div class="ring-outer absolute inset-0 rounded-full border border-dashed border-cyan-500/30"></div>
+          <div class="ring-inner absolute inset-3 rounded-full border border-indigo-500/30 border-t-cyan-400"></div>
+
+          <!-- Core Interactive Sphere -->
+          <button id="novaOrb" onclick="handleOrbClick()" aria-label="Activate Microphone"
+            class="orb-idle relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-900 flex flex-col items-center justify-center text-white cursor-pointer transition-all duration-300 focus:outline-none group">
+            <i id="orbIcon" class="fa-solid fa-microphone text-3xl sm:text-4xl mb-1 group-hover:scale-110 transition-transform"></i>
+            <span id="orbLabel" class="text-[11px] font-mono uppercase tracking-widest opacity-90">Tap to Speak</span>
+          </button>
+        </div>
+
+        <!-- Live Equalizer Wave -->
+        <div id="equalizer" class="mt-6 flex items-center justify-center gap-1.5 h-7">
+          <div class="eq-bar bg-cyan-400"></div>
+          <div class="eq-bar bg-indigo-400"></div>
+          <div class="eq-bar bg-cyan-300"></div>
+          <div class="eq-bar bg-emerald-400"></div>
+          <div class="eq-bar bg-cyan-300"></div>
+          <div class="eq-bar bg-indigo-400"></div>
+          <div class="eq-bar bg-cyan-400"></div>
+        </div>
+
+        <p id="liveTranscript" class="mt-2 text-center text-xs text-slate-400 min-h-[18px] italic px-2">
+          Click the orb or type a command below to begin...
+        </p>
+      </div>
+
+      <!-- Supported Capabilities Summary Card -->
+      <div class="bg-slate-950/80 border border-slate-800/90 rounded-2xl p-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-terminal text-cyan-400"></i>
+          Active Command Modules
+        </h2>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="flex items-center gap-2 text-slate-300 bg-slate-900/80 px-2.5 py-2 rounded-xl border border-slate-800/60">
+            <i class="fa-brands fa-wikipedia-w text-cyan-400 w-4 text-center"></i>
+            <span>Wikipedia / Who is</span>
+          </div>
+          <div class="flex items-center gap-2 text-slate-300 bg-slate-900/80 px-2.5 py-2 rounded-xl border border-slate-800/60">
+            <i class="fa-regular fa-clock text-indigo-400 w-4 text-center"></i>
+            <span>Time &amp; Date</span>
+          </div>
+          <div class="flex items-center gap-2 text-slate-300 bg-slate-900/80 px-2.5 py-2 rounded-xl border border-slate-800/60">
+            <i class="fa-brands fa-youtube text-rose-400 w-4 text-center"></i>
+            <span>YouTube &amp; Google</span>
+          </div>
+          <div class="flex items-center gap-2 text-slate-300 bg-slate-900/80 px-2.5 py-2 rounded-xl border border-slate-800/60">
+            <i class="fa-solid fa-calculator text-emerald-400 w-4 text-center"></i>
+            <span>Lab Calculator</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Conversation Log & Text Input -->
+    <section class="lg:col-span-7 flex flex-col bg-slate-900/70 backdrop-blur-md border border-slate-800/90 rounded-3xl shadow-2xl overflow-hidden min-h-[520px] max-h-[78vh]">
+      
+      <!-- Chat Header -->
+      <div class="px-5 py-3.5 border-b border-slate-800/90 flex items-center justify-between bg-slate-950/50">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-wave-square text-cyan-400 text-sm"></i>
+          <h2 class="text-sm font-semibold text-slate-200">Session Console &amp; Transcript</h2>
+        </div>
+        <button onclick="clearChatLog()" class="text-xs text-slate-400 hover:text-rose-400 transition flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-800/60">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Clear</span>
+        </button>
+      </div>
+
+      <!-- Messages Feed -->
+      <div id="chatLog" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        <!-- Welcome System Card -->
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-robot text-cyan-400 text-xs"></i>
+          </div>
+          <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl rounded-tl-none px-4 py-3 text-sm text-slate-200 max-w-[88%] shadow">
+            <p class="font-medium text-cyan-300 text-xs mb-1">NOVA SYSTEM INITIALIZED</p>
+            <p class="leading-relaxed">Welcome to the AI Lab. Click <strong>Start / Greet</strong> or tap the microphone orb to speak, or select a quick command chip below.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Command Chips -->
+      <div class="px-4 py-2.5 bg-slate-950/60 border-t border-slate-800/80">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <span class="text-[11px] font-mono text-slate-500 shrink-0">TRY:</span>
+          <button onclick="runQuickCommand('What is Artificial Intelligence?')"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 border border-slate-700 hover:border-cyan-500/40 transition">
+            What is Artificial Intelligence?
+          </button>
+          <button onclick="runQuickCommand('What time is it?')"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 border border-slate-700 hover:border-cyan-500/40 transition">
+            What time is it?
+          </button>
+          <button onclick="runQuickCommand('Today\'s date')"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 border border-slate-700 hover:border-cyan-500/40 transition">
+            Today's date
+          </button>
+          <button onclick="runQuickCommand('Open Calculator')"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-200 border border-slate-700 hover:border-emerald-500/40 transition">
+            Open Calculator
+          </button>
+          <button onclick="runQuickCommand('Open YouTube')"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-rose-500/20 text-slate-300 hover:text-rose-200 border border-slate-700 hover:border-rose-500/40 transition">
+            Open YouTube
+          </button>
+          <button onclick="runQuickCommand('Search Quantum Computing')"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-indigo-500/20 text-slate-300 hover:text-indigo-200 border border-slate-700 hover:border-indigo-500/40 transition">
+            Search Quantum Computing
+          </button>
+          <button onclick="runQuickCommand('Stop')"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-amber-500/20 text-slate-300 hover:text-amber-200 border border-slate-700 hover:border-amber-500/40 transition">
+            Stop
+          </button>
+        </div>
+      </div>
+
+      <!-- Text Input Bar -->
+      <form id="commandForm" onsubmit="handleTextSubmit(event)" class="p-3.5 sm:p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-2.5">
+        <button type="button" id="micBarBtn" onclick="toggleListening()" title="Voice Input"
+          class="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-slate-700/80 transition shrink-0">
+          <i id="micBarIcon" class="fa-solid fa-microphone"></i>
+        </button>
+        <input id="commandInput" type="text" autocomplete="off"
+          placeholder="Type a command (e.g. 'who is Alan Turing', 'time', 'open calculator')..."
+          class="flex-1 bg-slate-900 border border-slate-700/80 focus:border-cyan-500 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none transition" />
+        <button type="submit"
+          class="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-medium text-sm shadow-lg shadow-cyan-500/20 transition flex items-center gap-2 shrink-0">
+          <span>Send</span>
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Built-in Scientific & Standard Calculator Modal (Replaces os.system("calc")) -->
+  <div id="calculatorModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-fade-in">
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-calculator text-emerald-400"></i>
+          <h3 class="font-semibold text-sm text-white">Nova Lab Calculator</h3>
+        </div>
+        <button onclick="closeCalculatorModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Calculator Display -->
+      <div class="p-5 bg-slate-950/60">
+        <div id="calcHistory" class="text-right text-xs font-mono text-slate-400 h-5 overflow-hidden"></div>
+        <input id="calcDisplay" type="text" readonly value="0"
+          class="w-full bg-transparent text-right text-3xl font-mono font-semibold text-white focus:outline-none mt-1" />
+      </div>
+
+      <!-- Scientific Row -->
+      <div class="grid grid-cols-5 gap-1.5 px-4 pt-3 bg-slate-900">
+        <button onclick="calcFunc('sin')" class="calc-btn-sci">sin</button>
+        <button onclick="calcFunc('cos')" class="calc-btn-sci">cos</button>
+        <button onclick="calcFunc('tan')" class="calc-btn-sci">tan</button>
+        <button onclick="calcFunc('sqrt')" class="calc-btn-sci">√</button>
+        <button onclick="calcFunc('pow2')" class="calc-btn-sci">x²</button>
+      </div>
+
+      <!-- Standard Keypad -->
+      <div class="grid grid-cols-4 gap-2 p-4 bg-slate-900">
+        <button onclick="calcClear()" class="p-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-semibold text-sm transition">AC</button>
+        <button onclick="calcBackspace()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition"><i class="fa-solid fa-delete-left"></i></button>
+        <button onclick="calcAppend('%')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold text-sm transition">%</button>
+        <button onclick="calcAppend('/')" class="p-3 rounded-xl bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-300 font-semibold text-base transition">÷</button>
+
+        <button onclick="calcAppend('7')" class="calc-btn-num">7</button>
+        <button onclick="calcAppend('8')" class="calc-btn-num">8</button>
+        <button onclick="calcAppend('9')" class="calc-btn-num">9</button>
+        <button onclick="calcAppend('*')" class="p-3 rounded-xl bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-300 font-semibold text-base transition">×</button>
+
+        <button onclick="calcAppend('4')" class="calc-btn-num">4</button>
+        <button onclick="calcAppend('5')" class="calc-btn-num">5</button>
+        <button onclick="calcAppend('6')" class="calc-btn-num">6</button>
+        <button onclick="calcAppend('-')" class="p-3 rounded-xl bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-300 font-semibold text-base transition">−</button>
+
+        <button onclick="calcAppend('1')" class="calc-btn-num">1</button>
+        <button onclick="calcAppend('2')" class="calc-btn-num">2</button>
+        <button onclick="calcAppend('3')" class="calc-btn-num">3</button>
+        <button onclick="calcAppend('+')" class="p-3 rounded-xl bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-300 font-semibold text-base transition">+</button>
+
+        <button onclick="calcAppend('0')" class="col-span-2 calc-btn-num">0</button>
+        <button onclick="calcAppend('.')" class="calc-btn-num">.</button>
+        <button onclick="calcEvaluate()" class="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold text-base shadow-lg transition">=</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Python Source & Architecture Modal -->
+  <div id="pythonModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-brands fa-python text-indigo-400 text-lg"></i>
+          <div>
+            <h3 class="font-semibold text-sm text-white">Original Python Implementation &amp; Web API Mapping</h3>
+            <p class="text-xs text-slate-400">How desktop Python libraries translate to browser-native APIs</p>
+          </div>
+        </div>
+        <button onclick="closePythonModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6 overflow-y-auto space-y-5">
+        <!-- Mapping Table -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="p-3 rounded-2xl bg-slate-950/90 border border-slate-800">
+            <span class="font-mono text-cyan-400 font-semibold">pyttsx3</span>
+            <span class="text-slate-500 mx-1">→</span>
+            <span class="font-mono text-emerald-400">window.speechSynthesis</span>
+            <p class="text-slate-400 mt-1">Offline/OS Text-to-Speech mapped to the browser's native Speech Synthesis engine with selectable voices and rate.</p>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-950/90 border border-slate-800">
+            <span class="font-mono text-cyan-400 font-semibold">speech_recognition + sounddevice</span>
+            <span class="text-slate-500 mx-1">→</span>
+            <span class="font-mono text-emerald-400">SpeechRecognition API</span>
+            <p class="text-slate-400 mt-1">Direct browser microphone capture configured for <code class="text-slate-300">en-IN</code> without temporary WAV files.</p>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-950/90 border border-slate-800">
+            <span class="font-mono text-cyan-400 font-semibold">wikipedia.summary()</span>
+            <span class="text-slate-500 mx-1">→</span>
+            <span class="font-mono text-emerald-400">Wikipedia REST v1 API</span>
+            <p class="text-slate-400 mt-1">Fetches 2-sentence JSON summaries and thumbnails directly via CORS-enabled <code class="text-slate-300">fetch()</code>.</p>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-950/90 border border-slate-800">
+            <span class="font-mono text-cyan-400 font-semibold">os.system("calc")</span>
+            <span class="text-slate-500 mx-1">→</span>
+            <span class="font-mono text-emerald-400">Built-in Lab Calculator Modal</span>
+            <p class="text-slate-400 mt-1">Browser sandboxes block native OS executables, so Nova launches an integrated scientific calculator.</p>
+          </div>
+        </div>
+
+        <!-- Source Code Viewer -->
+        <div class="relative rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 border-b border-slate-800">
+            <span class="text-xs font-mono text-slate-400">nova_assistant.py</span>
+            <button id="copyPythonBtn" onclick="copyPythonCode()"
+              class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-xs font-medium transition">
+              <i class="fa-regular fa-copy"></i>
+              <span id="copyBtnText">Copy Code</span>
+            </button>
+          </div>
+          <pre id="pythonCodeBlock" class="p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">import speech_recognition as sr
+import pyttsx3
+import sounddevice as sd
+import scipy.io.wavfile as wav
+import datetime
+import wikipedia
+import webbrowser
+import tempfile
+import os
+
+# Initialize offline Text-to-Speech
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id if len(voices) > 1 else voices[0].id)
+engine.setProperty('rate', 175)
+
+def speak(text):
+    print(f"Assistant: {text}")
+    engine.say(text)
+    engine.runAndWait()
+
+def greet_user():
+    hour = datetime.datetime.now().hour
+    if 0 <= hour < 12:
+        speak("Good morning!")
+    elif 12 <= hour < 18:
+        speak("Good afternoon!")
+    else:
+        speak("Good evening!")
+    speak("I am Nova, your AI lab assistant. How can I help you?")
+
+def listen_command(use_mic=True, duration=5, fs=16000):
+    if not use_mic:
+        return input("You (Type command): ").lower()
+
+    print(f"\nListening ({duration}s)...")
+    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
+    sd.wait()
+    print("Recognizing...")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+        wav.write(tmp_file.name, fs, recording)
+        tmp_path = tmp_file.name
+
+    recognizer = sr.Recognizer()
+    try:
+        with sr.AudioFile(tmp_path) as source:
+            audio = recognizer.record(source)
+        query = recognizer.recognize_google(audio, language='en-in')
+        print(f"You: {query}")
+        return query.lower()
+    except sr.UnknownValueError:
+        speak("Sorry, I didn't catch that. Could you repeat?")
+        return ""
+    except sr.RequestError:
+        speak("Network error. Switching to text input.")
+        return input("You (Type command): ").lower()
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+def process_command(query):
+    if not query:
+        return True
+
+    if 'wikipedia' in query or 'who is' in query or 'what is' in query:
+        speak("Searching Wikipedia...")
+        topic = query.replace("wikipedia", "").replace("who is", "").replace("what is", "").strip()
+        try:
+            results = wikipedia.summary(topic, sentences=2)
+            speak("According to Wikipedia:")
+            speak(results)
+        except Exception:
+            speak("I couldn't find clear information on that topic.")
+
+    elif 'time' in query:
+        speak(f"The current time is {datetime.datetime.now().strftime('%I:%M %p')}")
+
+    elif 'date' in query:
+        speak(f"Today's date is {datetime.datetime.now().strftime('%B %d, %Y')}")
+
+    elif 'open youtube' in query:
+        speak("Opening YouTube.")
+        webbrowser.open("https://www.youtube.com")
+
+    elif 'open google' in query:
+        speak("Opening Google.")
+        webbrowser.open("https://www.google.com")
+
+    elif 'search' in query:
+        search_term = query.replace("search", "").strip()
+        speak(f"Searching Google for {search_term}")
+        webbrowser.open(f"https://www.google.com/search?q={search_term}")
+
+    elif 'open calculator' in query:
+        speak("Opening Calculator.")
+        os.system("calc")
+
+    elif 'exit' in query or 'stop' in query or 'bye' in query:
+        speak("Shutting down. Good luck with your AI lab!")
+        return False
+
+    else:
+        speak("Searching Google for that.")
+        webbrowser.open(f"https://www.google.com/search?q={query}")
+
+    return True
+
+if __name__ == "__main__":
+    greet_user()
+    running = True
+    while running:
+        user_query = listen_command(use_mic=True)
+        running = process_command(user_query)</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reusable Utility Styles for Calculator Buttons -->
+  <style>
+    .calc-btn-num {
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      background-color: #1E293B;
+      color: #F8FAFC;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.15s ease;
+    }
+    .calc-btn-num:hover {
+      background-color: #334155;
+    }
+    .calc-btn-num:active {
+      transform: scale(0.95);
+    }
+    .calc-btn-sci {
+      padding: 0.45rem;
+      border-radius: 0.65rem;
+      background-color: rgba(15, 23, 42, 0.9);
+      border: 1px solid #1E293B;
+      color: #94A3B8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      transition: all 0.15s ease;
+    }
+    .calc-btn-sci:hover {
+      color: #22D3EE;
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+
+  <!-- Core Application Logic -->
+  <script>
+    // ==========================================
+    // 1. STATE & INITIALIZATION
+    // ==========================================
+    const state = {
+      ttsEnabled: true,
+      isListening: false,
+      isSpeaking: false,
+      isStandby: false,
+      hasGreeted: false,
+      speechRate: 1.05,
+      selectedVoiceURI: '',
+      recognitionLang: 'en-IN',
+      voices: [],
+      recognition: null
+    };
+
+    const synth = window.speechSynthesis;
+
+    // DOM Elements
+    const novaOrb = document.getElementById('novaOrb');
+    const orbIcon = document.getElementById('orbIcon');
+    const orbLabel = document.getElementById('orbLabel');
+    const equalizer = document.getElementById('equalizer');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const liveTranscript = document.getElementById('liveTranscript');
+    const chatLog = document.getElementById('chatLog');
+    const commandInput = document.getElementById('commandInput');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rateSlider = document.getElementById('rateSlider');
+    const rateValue = document.getElementById('rateValue');
+    const langSelect = document.getElementById('langSelect');
+
+    // Initialize Clock
+    function updateHeaderClock() {
+      const now = new Date();
+      document.getElementById('clockText').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    }
+    setInterval(updateHeaderClock, 1000);
+    updateHeaderClock();
+
+    // ==========================================
+    // 2. TEXT-TO-SPEECH (pyttsx3 Equivalent)
+    // ==========================================
+    function populateVoices() {
+      if (!synth) return;
+      state.voices = synth.getVoices();
+      if (!state.voices.length) return;
+
+      const currentVal = voiceSelect.value;
+      voiceSelect.innerHTML = '<option value="">Default System Voice</option>';
+
+      // Prefer female/natural English voices like Python's voices[1]
+      let preferredIndex = -1;
+      state.voices.forEach((voice, idx) => {
+        const opt = document.createElement('option');
+        opt.value = voice.voiceURI;
+        opt.textContent = `${voice.name} (${voice.lang})`;
+        voiceSelect.appendChild(opt);
+
+        if (preferredIndex === -1 && (voice.lang.includes('en-IN') || voice.name.includes('Female') || voice.name.includes('Google') || voice.name.includes('Zira'))) {
+          preferredIndex = idx;
+        }
+      });
+
+      if (currentVal) {
+        voiceSelect.value = currentVal;
+      } else if (preferredIndex !== -1) {
+        voiceSelect.value = state.voices[preferredIndex].voiceURI;
+        state.selectedVoiceURI = state.voices[preferredIndex].voiceURI;
+      }
+    }
+
+    if (synth) {
+      populateVoices();
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = populateVoices;
+      }
+    }
+
+    voiceSelect.addEventListener('change', (e) => {
+      state.selectedVoiceURI = e.target.value;
+    });
+
+    rateSlider.addEventListener('input', (e) => {
+      state.speechRate = parseFloat(e.target.value);
+      rateValue.textContent = `${state.speechRate.toFixed(2)}x`;
+    });
+
+    langSelect.addEventListener('change', (e) => {
+      state.recognitionLang = e.target.value;
+      if (state.recognition) {
+        state.recognition.lang = state.recognitionLang;
+      }
+    });
+
+    function toggleTTS() {
+      state.ttsEnabled = !state.ttsEnabled;
+      const icon = document.getElementById('ttsIcon');
+      const label = document.getElementById('ttsLabel');
+      const btn = document.getElementById('ttsToggleBtn');
+
+      if (state.ttsEnabled) {
+        icon.className = 'fa-solid fa-volume-high';
+        label.textContent = 'Voice On';
+        btn.classList.remove('text-slate-400');
+        btn.classList.add('text-cyan-300');
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark';
+        label.textContent = 'Muted';
+        btn.classList.remove('text-cyan-300');
+        btn.classList.add('text-slate-400');
+        if (synth) synth.cancel();
+        setVisualState('idle');
+      }
+    }
+
+    function toggleVoiceSettings() {
+      const panel = document.getElementById('voiceSettingsPanel');
+      panel.classList.toggle('hidden');
+    }
+
+    /**
+     * Speaks text using browser SpeechSynthesis and logs it in the UI
+     */
+    function speak(text, logToChat = true, extraHtml = '') {
+      if (logToChat) {
+        appendAssistantMessage(text, extraHtml);
+      }
+
+      if (!state.ttsEnabled || !synth) return;
+
+      // Cancel ongoing utterance to prevent overlap
+      synth.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = state.speechRate;
+      utterance.pitch = 1.02;
+
+      if (state.selectedVoiceURI) {
+        const match = state.voices.find(v => v.voiceURI === state.selectedVoiceURI);
+        if (match) utterance.voice = match;
+      }
+
+      utterance.onstart = () => {
+        state.isSpeaking = true;
+        if (!state.isListening) setVisualState('speaking');
+      };
+
+      utterance.onend = () => {
+        state.isSpeaking = false;
+        if (!state.isListening) {
+          setVisualState(state.isStandby ? 'standby' : 'idle');
+        }
+      };
+
+      utterance.onerror = () => {
+        state.isSpeaking = false;
+        if (!state.isListening) {
+          setVisualState(state.isStandby ? 'standby' : 'idle');
+        }
+      };
+
+      synth.speak(utterance);
+    }
+
+    // ==========================================
+    // 3. GREETING & POWER CONTROL
+    // ==========================================
+    function greetUser() {
+      state.isStandby = false;
+      state.hasGreeted = true;
+      setVisualState('idle');
+
+      const hour = new Date().getHours();
+      let timeGreeting = 'Good evening!';
+      if (hour >= 0 && hour < 12) {
+        timeGreeting = 'Good morning!';
+      } else if (hour >= 12 && hour < 18) {
+        timeGreeting = 'Good afternoon!';
+      }
+
+      const fullGreeting = `${timeGreeting} I am Nova, your AI lab assistant. How can I help you?`;
+      speak(fullGreeting, true);
+    }
+
+    function toggleNovaPower() {
+      if (state.isStandby) {
+        greetUser();
+      } else if (!state.hasGreeted) {
+        greetUser();
+      } else {
+        greetUser();
+      }
+    }
+
+    // ==========================================
+    // 4. SPEECH RECOGNITION (speech_recognition)
+    // ==========================================
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showBanner('Speech Recognition is not supported in this browser. Please use Chrome/Edge or type commands below.');
+        return null;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = state.recognitionLang;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+
+      recognition.onstart = () => {
+        state.isListening = true;
+        state.isStandby = false;
+        setVisualState('listening');
+        liveTranscript.textContent = 'Listening... Speak your command clearly';
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interim += transcript;
+          }
+        }
+
+        if (interim) {
+          liveTranscript.textContent = `Recognizing: "${interim}"...`;
+        }
+
+        if (finalTranscript) {
+          const cleanQuery = finalTranscript.trim();
+          liveTranscript.textContent = `Recognized: "${cleanQuery}"`;
+          appendUserMessage(cleanQuery);
+          processCommand(cleanQuery.toLowerCase());
+        }
+      };
+
+      recognition.onerror = (event) => {
+        state.isListening = false;
+        setVisualState(state.isStandby ? 'standby' : 'idle');
+
+        if (event.error === 'no-speech') {
+          liveTranscript.textContent = "No speech detected. Tap the orb to try again.";
+          speak("Sorry, I didn't catch that. Could you repeat?");
+        } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          showBanner('Microphone access was blocked or denied. Please allow microphone permissions or use the text command box.');
+          liveTranscript.textContent = 'Microphone permission denied — use text box below.';
+        } else if (event.error === 'network') {
+          speak("Network error. Switching to text input.");
+          commandInput.focus();
+        } else {
+          liveTranscript.textContent = `Voice input stopped (${event.error}).`;
+        }
+      };
+
+      recognition.onend = () => {
+        state.isListening = false;
+        if (!state.isSpeaking) {
+          setVisualState(state.isStandby ? 'standby' : 'idle');
+        }
+      };
+
+      return recognition;
+    }
+
+    function toggleListening() {
+      if (state.isStandby) {
+        state.isStandby = false;
+        setVisualState('idle');
+      }
+
+      if (synth && synth.speaking) {
+        synth.cancel();
+      }
+
+      if (!state.recognition) {
+        state.recognition = initSpeechRecognition();
+      }
+
+      if (!state.recognition) {
+        commandInput.focus();
+        return;
+      }
+
+      if (state.isListening) {
+        state.recognition.stop();
+      } else {
+        try {
+          state.recognition.lang = state.recognitionLang;
+          state.recognition.start();
+        } catch (err) {
+          console.warn('Recognition restart handled:', err);
+        }
+      }
+    }
+
+    function handleOrbClick() {
+      toggleListening();
+    }
+
+    // ==========================================
+    // 5. COMMAND PROCESSING ENGINE (Python Parity)
+    // ==========================================
+    async function processCommand(rawQuery) {
+      const query = rawQuery.trim().toLowerCase();
+      if (!query) return;
+
+      // Wake up if in standby
+      if (state.isStandby && !['exit', 'stop', 'bye'].some(k => query.includes(k))) {
+        state.isStandby = false;
+        setVisualState('idle');
+      }
+
+      // 1. WIKIPEDIA LOOKUP ('wikipedia', 'who is', 'what is')
+      if (query.includes('wikipedia') || query.includes('who is') || query.includes('what is')) {
+        const topic = query
+          .replace(/wikipedia/gi, '')
+          .replace(/who is/gi, '')
+          .replace(/what is/gi, '')
+          .replace(/\?/g, '')
+          .trim();
+
+        if (!topic) {
+          speak("Please specify a topic to search on Wikipedia.");
+          return;
+        }
+
+        speak("Searching Wikipedia...");
+        setVisualState('recognizing');
+
+        try {
+          const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`);
+          if (!response.ok) throw new Error('Topic not found');
+          const data = await response.json();
+
+          if (data.extract) {
+            // Extract first 2 sentences to match wikipedia.summary(topic, sentences=2)
+            const sentences = data.extract.match(/[^.!?]+[.!?]+/g) || [data.extract];
+            const twoSentences = sentences.slice(0, 2).join(' ').trim();
+
+            const wikiCardHtml = buildWikiCard(data, twoSentences);
+            speak(`According to Wikipedia: ${twoSentences}`, true, wikiCardHtml);
+          } else {
+            speak("I couldn't find clear information on that topic.");
+          }
+        } catch (error) {
+          speak("I couldn't find clear information on that topic.");
+        } finally {
+          setVisualState(state.isSpeaking ? 'speaking' : 'idle');
+        }
+        return;
+      }
+
+      // 2. TIME ('time')
+      if (query.includes('time')) {
+        const formattedTime = new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        speak(`The current time is ${formattedTime}`);
+        return;
+      }
+
+      // 3. DATE ('date')
+      if (query.includes('date')) {
+        const formattedDate = new Date().toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        });
+        speak(`Today's date is ${formattedDate}`);
+        return;
+      }
+
+      // 4. OPEN YOUTUBE ('open youtube')
+      if (query.includes('open youtube')) {
+        const url = 'https://www.youtube.com';
+        const linkCard = buildLinkCard('YouTube', 'Video Streaming Platform', url, 'fa-brands fa-youtube text-rose-400');
+        speak('Opening YouTube.', true, linkCard);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      // 5. OPEN GOOGLE ('open google')
+      if (query.includes('open google')) {
+        const url = 'https://www.google.com';
+        const linkCard = buildLinkCard('Google Search', 'Web Search Engine', url, 'fa-brands fa-google text-cyan-400');
+        speak('Opening Google.', true, linkCard);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      // 6. SEARCH ('search <term>')
+      if (query.includes('search')) {
+        const searchTerm = query.replace(/search/gi, '').trim();
+        if (!searchTerm) {
+          speak('What would you like me to search for?');
+          return;
+        }
+        const url = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`;
+        const linkCard = buildLinkCard(`Google Search: "${searchTerm}"`, 'Click to view search results', url, 'fa-solid fa-magnifying-glass text-indigo-400');
+        speak(`Searching Google for ${searchTerm}`, true, linkCard);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      // 7. OPEN CALCULATOR ('open calculator')
+      if (query.includes('open calculator') || query === 'calculator') {
+        speak('Opening Calculator.');
+        openCalculatorModal();
+        return;
+      }
+
+      // 8. EXIT / STOP ('exit', 'stop', 'bye')
+      if (query.includes('exit') || query.includes('stop') || query.includes('bye')) {
+        speak('Shutting down. Good luck with your AI lab!');
+        if (state.isListening && state.recognition) {
+          state.recognition.stop();
+        }
+        state.isStandby = true;
+        setTimeout(() => {
+          if (state.isStandby) setVisualState('standby');
+        }, 2800);
+        return;
+      }
+
+      // 9. FALLBACK GOOGLE SEARCH
+      const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(rawQuery)}`;
+      const fallbackCard = buildLinkCard(`Search: "${rawQuery}"`, 'Fallback Google Web Search', fallbackUrl, 'fa-solid fa-globe text-cyan-400');
+      speak('Searching Google for that.', true, fallbackCard);
+      window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    // ==========================================
+    // 6. UI VISUALS & CHAT RENDERING
+    // ==========================================
+    function setVisualState(mode) {
+      novaOrb.classList.remove('orb-idle', 'orb-listening', 'orb-speaking', 'orb-standby');
+      equalizer.classList.remove('eq-active');
+
+      const micBarBtn = document.getElementById('micBarBtn');
+      const powerBtnText = document.getElementById('powerBtnText');
+
+      if (mode === 'listening') {
+        novaOrb.classList.add('orb-listening');
+        orbIcon.className = 'fa-solid fa-waveform-lines fa-microphone-lines text-3xl sm:text-4xl mb-1 animate-pulse';
+        orbLabel.textContent = 'Listening...';
+        statusDot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-ping';
+        statusText.textContent = 'LISTENING';
+        equalizer.classList.add('eq-active');
+        micBarBtn.classList.add('bg-rose-500/20', 'text-rose-400', 'border-rose-500/50');
+      } else if (mode === 'speaking') {
+        novaOrb.classList.add('orb-speaking');
+        orbIcon.className = 'fa-solid fa-volume-high text-3xl sm:text-4xl mb-1';
+        orbLabel.textContent = 'Speaking...';
+        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        statusText.textContent = 'SPEAKING';
+        equalizer.classList.add('eq-active');
+        micBarBtn.classList.remove('bg-rose-500/20', 'text-rose-400', 'border-rose-500/50');
+      } else if (mode === 'recognizing') {
+        novaOrb.classList.add('orb-idle');
+        orbIcon.className = 'fa-solid fa-spinner fa-spin text-3xl sm:text-4xl mb-1';
+        orbLabel.textContent = 'Processing...';
+        statusDot.className = 'w-2 h-2 rounded-full bg-indigo-400 animate-ping';
+        statusText.textContent = 'PROCESSING';
+      } else if (mode === 'standby') {
+        novaOrb.classList.add('orb-standby');
+        orbIcon.className = 'fa-solid fa-moon text-3xl sm:text-4xl mb-1';
+        orbLabel.textContent = 'Standby';
+        statusDot.className = 'w-2 h-2 rounded-full bg-slate-500';
+        statusText.textContent = 'STANDBY';
+        powerBtnText.textContent = 'Wake Nova';
+        liveTranscript.textContent = 'Nova is in standby mode. Click "Wake Nova" or tap the orb.';
+        micBarBtn.classList.remove('bg-rose-500/20', 'text-rose-400', 'border-rose-500/50');
+      } else {
+        novaOrb.classList.add('orb-idle');
+        orbIcon.className = 'fa-solid fa-microphone text-3xl sm:text-4xl mb-1';
+        orbLabel.textContent = 'Tap to Speak';
+        statusDot.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse';
+        statusText.textContent = 'ONLINE';
+        powerBtnText.textContent = 'Greet';
+        micBarBtn.classList.remove('bg-rose-500/20', 'text-rose-400', 'border-rose-500/50');
+      }
+    }
+
+    function appendUserMessage(text) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'flex items-start justify-end gap-3';
+      wrapper.innerHTML = `
+        <div class="bg-gradient-to-br from-indigo-600 to-cyan-600 text-white rounded-2xl rounded-tr-none px-4 py-2.5 text-sm max-w-[82%] shadow-md">
+          <p class="leading-relaxed">${escapeHtml(text)}</p>
+        </div>
+        <div class="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center shrink-0 mt-0.5">
+          <i class="fa-solid fa-user text-indigo-300 text-xs"></i>
+        </div>
+      `;
+      chatLog.appendChild(wrapper);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function appendAssistantMessage(text, extraHtml = '') {
+      const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const wrapper = document.createElement('div');
+      wrapper.className = 'flex items-start gap-3';
+      wrapper.innerHTML = `
+        <div class="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0 mt-0.5">
+          <i class="fa-solid fa-atom text-cyan-400 text-xs"></i>
+        </div>
+        <div class="bg-slate-800/85 border border-slate-700/75 rounded-2xl rounded-tl-none px-4 py-3 text-sm text-slate-200 max-w-[88%] shadow">
+          <div class="flex items-center justify-between gap-4 mb-1">
+            <span class="text-[11px] font-mono text-cyan-400 font-semibold">NOVA</span>
+            <span class="text-[10px] text-slate-500">${timeStr}</span>
+          </div>
+          <p class="leading-relaxed">${escapeHtml(text)}</p>
+          ${extraHtml}
+        </div>
+      `;
+      chatLog.appendChild(wrapper);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function buildWikiCard(data, summaryText) {
+      const pageUrl = data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(data.title)}`;
+      const thumbHtml = data.thumbnail?.source
+        ? `<img src="${data.thumbnail.source}" alt="${escapeHtml(data.title)}" onerror="this.style.display='none'" class="w-16 h-16 rounded-xl object-cover border border-slate-700 shrink-0" />`
+        : '';
+
+      return `
+        <div class="mt-3 p-3 rounded-xl bg-slate-950/90 border border-slate-700/80 flex items-start gap-3">
+          ${thumbHtml}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="font-semibold text-xs text-white truncate">${escapeHtml(data.title)}</h4>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Wikipedia</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 line-clamp-2">${escapeHtml(summaryText)}</p>
+            <a href="${pageUrl}" target="_blank" rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-cyan-400 hover:text-cyan-300">
+              <span>Read full article</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildLinkCard(title, subtitle, url, iconClass) {
+      return `
+        <a href="${url}" target="_blank" rel="noopener noreferrer"
+          class="mt-2.5 flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-950/90 hover:bg-slate-950 border border-slate-700/80 hover:border-cyan-500/50 transition group">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">
+              <i class="${iconClass} text-base"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 truncate">${escapeHtml(title)}</p>
+              <p class="text-[11px] text-slate-500 truncate">${escapeHtml(subtitle)}</p>
+            </div>
+          </div>
+          <span class="text-xs text-slate-400 group-hover:text-cyan-400 shrink-0 px-2">
+            Open <i class="fa-solid fa-up-right-from-square text-[10px] ml-1"></i>
+          </span>
+        </a>
+      `;
+    }
+
+    function handleTextSubmit(e) {
+      e.preventDefault();
+      const text = commandInput.value.trim();
+      if (!text) return;
+      commandInput.value = '';
+      appendUserMessage(text);
+      processCommand(text);
+    }
+
+    function runQuickCommand(cmd) {
+      appendUserMessage(cmd);
+      processCommand(cmd);
+    }
+
+    function clearChatLog() {
+      chatLog.innerHTML = '';
+      appendAssistantMessage('Session console cleared. Ready for your next command.');
+    }
+
+    function showBanner(msg) {
+      const banner = document.getElementById('notificationBanner');
+      document.getElementById('notificationText').textContent = msg;
+      banner.classList.remove('hidden');
+    }
+
+    function hideBanner() {
+      document.getElementById('notificationBanner').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ==========================================
+    // 7. BUILT-IN CALCULATOR LOGIC
+    // ==========================================
+    let calcExpression = '';
+    const calcDisplay = document.getElementById('calcDisplay');
+    const calcHistory = document.getElementById('calcHistory');
+
+    function openCalculatorModal() {
+      const modal = document.getElementById('calculatorModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCalculatorModal() {
+      const modal = document.getElementById('calculatorModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function calcAppend(val) {
+      if (calcExpression === 'Error') calcExpression = '';
+      calcExpression += val;
+      calcDisplay.value = calcExpression || '0';
+    }
+
+    function calcClear() {
+      calcExpression = '';
+      calcHistory.textContent = '';
+      calcDisplay.value = '0';
+    }
+
+    function calcBackspace() {
+      if (calcExpression === 'Error') {
+        calcClear();
+        return;
+      }
+      calcExpression = calcExpression.slice(0, -1);
+      calcDisplay.value = calcExpression || '0';
+    }
+
+    function calcFunc(fn) {
+      try {
+        const current = parseFloat(eval(calcExpression || '0'));
+        let res = 0;
+        if (fn === 'sin') res = Math.sin((current * Math.PI) / 180);
+        if (fn === 'cos') res = Math.cos((current * Math.PI) / 180);
+        if (fn === 'tan') res = Math.tan((current * Math.PI) / 180);
+        if (fn === 'sqrt') res = Math.sqrt(current);
+        if (fn === 'pow2') res = Math.pow(current, 2);
+
+        calcHistory.textContent = `${fn}(${current})`;
+        calcExpression = Number(res.toFixed(8)).toString();
+        calcDisplay.value = calcExpression;
+      } catch {
+        calcExpression = 'Error';
+        calcDisplay.value = 'Error';
+      }
+    }
+
+    function calcEvaluate() {
+      if (!calcExpression) return;
+      try {
+        // Sanitize expression before evaluation
+        const sanitized = calcExpression.replace(/[^0-9+\-*/.%()]/g, '');
+        const result = Function(`"use strict"; return (${sanitized})`)();
+        calcHistory.textContent = `${calcExpression} =`;
+        calcExpression = Number.isFinite(result) ? Number(result.toFixed(8)).toString() : 'Error';
+        calcDisplay.value = calcExpression;
+      } catch {
+        calcExpression = 'Error';
+        calcDisplay.value = 'Error';
+      }
+    }
+
+    // ==========================================
+    // 8. PYTHON SOURCE MODAL & CLIPBOARD COPY
+    // ==========================================
+    function openPythonModal() {
+      const modal = document.getElementById('pythonModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePythonModal() {
+      const modal = document.getElementById('pythonModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function copyPythonCode() {
+      const codeText = document.getElementById('pythonCodeBlock').innerText;
+      const textarea = document.createElement('textarea');
+      textarea.value = codeText;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        const btnText = document.getElementById('copyBtnText');
+        btnText.textContent = 'Copied!';
+        setTimeout(() => {
+          btnText.textContent = 'Copy Code';
+        }, 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeCalculatorModal();
+        closePythonModal();
+      }
+    });
+  </script>
+</body>
+</html>
